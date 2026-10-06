@@ -13,6 +13,7 @@ ollama==0.4.*
 # --- Agent de recherche web ---
 langchain-deepseek==0.1.*
 ddgs
+requests
 beautifulsoup4
 
 # --- Config ---
