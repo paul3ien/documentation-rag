@@ -39,6 +39,12 @@ OLLAMA_HOST = _setting("OLLAMA_HOST", "ollama_host", "http://localhost:11434")
 OLLAMA_MODEL = _setting("OLLAMA_MODEL", "ollama_model", "qwen2.5:3b-instruct-q4_K_M")
 JUDGE_MODEL = _setting("JUDGE_MODEL", "judge_model", OLLAMA_MODEL)
 
+# --- DeepSeek (agent de recherche web) ---
+# La clé vient uniquement de l'environnement / .env (jamais de params.yaml,
+# qui est versionné).
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_MODEL = _setting("DEEPSEEK_MODEL", "deepseek_model", "deepseek-chat")
+
 # --- Embeddings (fastembed : léger, sans torch) ---
 EMBEDDING_MODEL = _setting("EMBEDDING_MODEL", "embedding_model", "BAAI/bge-small-en-v1.5")
 EMBEDDING_DIM = _setting("EMBEDDING_DIM", "embedding_dim", 384, int)

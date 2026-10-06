@@ -17,3 +17,8 @@ embedding_model: BAAI/bge-small-en-v1.5
 embedding_dim: 384
 ollama_model: qwen2.5:3b-instruct-q4_K_M
 judge_model: qwen2.5:3b-instruct-q4_K_M
+
+# --- Agent de recherche web ---
+# Note : la clé API DeepSeek n'est JAMAIS ici (fichier versionné). Elle se met
+# dans .env ou dans la variable d'environnement DEEPSEEK_API_KEY.
+deepseek_model: deepseek-chat
