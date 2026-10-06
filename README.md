@@ -44,6 +44,7 @@ d'informations de sa propre initiative.
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 ```
 
 Prérequis : [Ollama](https://ollama.com) installé et un modèle disponible, p. ex.
