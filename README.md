@@ -84,6 +84,23 @@ dans MLflow :
 python -m eval.ragas_eval
 ```
 
+### Résultats
+
+Dernier run sur `eval/datasets/sample_qa.json` (juge `qwen2.5:3b-instruct-q4_K_M`) :
+
+| Métrique | Score |
+|----------|-------|
+| Faithfulness | 0.92 |
+| Context precision | 0.82 |
+| Answer relevancy | 0.89 |
+
+Les scores sont écrits dans `eval/results.json` et journalisés dans MLflow
+(`mlflow ui` pour les consulter).
+
+L'évaluation de la version précédente est conservée dans MLflow sous
+l'expérience `rag-eval-v1` (4 runs), pour garder une trace : faithfulness
+`NaN`, context precision `0.67`, answer relevancy `0.64`.
+
 ## Pipeline (DVC)
 
 Le pipeline est décrit dans `dvc.yaml` (stages `ingest` puis `eval`) et ses
