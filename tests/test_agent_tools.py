@@ -125,3 +125,27 @@ def test_read_url_detects_pdf_by_extension(monkeypatch):
     result = tools.read_url("http://example.com/manual.PDF")
 
     assert "depuis extension" in result["text"]
+
+
+def test_save_document_writes_markdown(tmp_path):
+    path = tools.save_document(
+        "Titre du doc", "Contenu important.", "http://example.com", docs_dir=tmp_path
+    )
+
+    assert path == tmp_path / "titre-du-doc.md"
+    text = path.read_text(encoding="utf-8")
+    assert "# Titre du doc" in text
+    assert "http://example.com" in text
+    assert "Contenu important." in text
+
+
+def test_save_document_slugifies_title(tmp_path):
+    path = tools.save_document("TS5A3157 — Datasheet!", "x", docs_dir=tmp_path)
+
+    assert path.name == "ts5a3157-datasheet.md"
+
+
+def test_save_document_without_source(tmp_path):
+    path = tools.save_document("Titre", "x", docs_dir=tmp_path)
+
+    assert "Source :" not in path.read_text(encoding="utf-8")
