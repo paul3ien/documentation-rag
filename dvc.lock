@@ -1,0 +1,29 @@
+schema: '2.0'
+stages:
+  ingest:
+    cmd: python scripts/ingest.py
+    deps:
+    - path: app
+      hash: md5
+      md5: 9d837d69d3376d3ce80203801acce946.dir
+      size: 12043
+      nfiles: 11
+    - path: data/raw_docs
+      hash: md5
+      md5: c03a2d02b72897c43c15e8a2eb586f75.dir
+      size: 1323449
+      nfiles: 3
+    - path: scripts/ingest.py
+      hash: md5
+      md5: 950ced698d2f7007415fdef4c150a325
+      size: 785
+    params:
+      params.yaml:
+        chunk_size: 200
+        overlap: 50
+    outs:
+    - path: storage
+      hash: md5
+      md5: df2e3c5c744366c145fcff52c70efbbe.dir
+      size: 427812
+      nfiles: 4

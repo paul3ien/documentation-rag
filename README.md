@@ -34,6 +34,8 @@ d'informations de sa propre initiative.
 ├── scripts/               # scripts d'ingestion
 ├── eval/                  # évaluation RAGAS
 ├── tests/                 # tests (pytest)
+├── params.yaml            # paramètres du pipeline
+├── dvc.yaml               # pipeline DVC (stages ingest, eval)
 ├── data/raw_docs/         # documents sources (non versionnés)
 └── storage/               # index générés (non versionnés)
 ```
@@ -77,6 +79,17 @@ dans MLflow :
 python -m eval.ragas_eval
 ```
 
+## Pipeline (DVC)
+
+Le pipeline est décrit dans `dvc.yaml` (stages `ingest` puis `eval`) et ses
+paramètres dans `params.yaml`, surchargeables par variables d'environnement.
+
+```sh
+dvc repro ingest   # (re)génère les index
+
+dvc repro          # pipeline complet (ingest + éval ; nécessite Ollama)
+```
+
 ## Avancement
 
 - [x] Configuration centralisée
@@ -87,4 +100,5 @@ python -m eval.ragas_eval
 - [x] Client LLM (Ollama)
 - [x] API FastAPI
 - [x] Évaluation RAGAS + MLflow
-- [ ] DVC / paramètres
+- [x] Évaluation RAGAS + MLflow
+- [x] DVC / paramètres

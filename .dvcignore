@@ -1,0 +1,6 @@
+# Fichiers ignorés par DVC lors du calcul des dépendances.
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/

@@ -23,3 +23,5 @@ mlflow==2.18.*
 
 # --- MLOps ---
 dvc[ssh]==3.58.*
+# dvc 3.58 est incompatible avec pathspec>=1.0 (import `_DIR_MARK`)
+pathspec<1.0

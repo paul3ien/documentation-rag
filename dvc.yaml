@@ -1,0 +1,25 @@
+stages:
+  ingest:
+    desc: "Extrait, découpe et indexe les documents (Qdrant + BM25)."
+    cmd: python scripts/ingest.py
+    deps:
+      - app
+      - scripts/ingest.py
+      - data/raw_docs
+    params:
+      - chunk_size
+      - overlap
+    outs:
+      - storage
+
+  eval:
+    desc: "Évalue le RAG avec RAGAS et journalise les scores dans MLflow."
+    cmd: python -m eval.ragas_eval
+    deps:
+      - app
+      - eval/ragas_eval.py
+      - eval/datasets/sample_qa.json
+    params:
+      - top_k_final
+    outs:
+      - eval/results.json
