@@ -6,14 +6,17 @@ import ollama
 
 from app.config import OLLAMA_HOST, OLLAMA_MODEL
 
-PROMPT_TEMPLATE = """Tu es un assistant technique. Réponds STRICTEMENT à partir du contexte fourni ci-dessous.
+# Phrase que le modèle doit renvoyer quand l'information est absente du contexte.
+ABSENCE_PHRASE = "Cette information n'est pas présente dans la documentation fournie."
+
+PROMPT_TEMPLATE = f"""Tu es un assistant technique. Réponds STRICTEMENT à partir du contexte fourni ci-dessous.
 N'ajoute AUCUNE information, exemple ou détail qui n'est pas explicitement présent dans ce contexte, même si cela te semble plausible ou utile.
-Si le contexte ne contient pas la réponse complète à la question, dis clairement : "Cette information n'est pas présente dans la documentation fournie."
+Si le contexte ne contient pas la réponse complète à la question, dis clairement : "{ABSENCE_PHRASE}"
 
 Contexte:
-{context}
+{{context}}
 
-Question: {question}
+Question: {{question}}
 
 Réponse (strictement basée sur le contexte ci-dessus, sans ajout):"""
 
