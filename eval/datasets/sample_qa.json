@@ -1,0 +1,14 @@
+[
+  {
+    "question": "Quelle est la résistance ON-state (ron) du TS5A3157 ?",
+    "ground_truth": "10 ohms."
+  },
+  {
+    "question": "Quelle est la plage de tension d'alimentation du TS5A3157 ?",
+    "ground_truth": "De 1.65V à 5.5V en alimentation simple."
+  },
+  {
+    "question": "Quels sont les boîtiers disponibles pour le TS5A3157 ?",
+    "ground_truth": "SOT-23 (DBV), SC70 (DCK) et DSBGA (YZP)."
+  }
+]

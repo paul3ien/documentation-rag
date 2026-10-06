@@ -67,6 +67,16 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
+## Évaluation
+
+Un jeu de questions/réponses de référence est évalué avec RAGAS
+(faithfulness, context precision, answer relevancy) et les scores sont suivis
+dans MLflow :
+
+```sh
+python -m eval.ragas_eval
+```
+
 ## Avancement
 
 - [x] Configuration centralisée
@@ -76,5 +86,5 @@ pytest
 - [x] Recherche hybride (RRF)
 - [x] Client LLM (Ollama)
 - [x] API FastAPI
-- [ ] Évaluation RAGAS + MLflow
+- [x] Évaluation RAGAS + MLflow
 - [ ] DVC / paramètres
