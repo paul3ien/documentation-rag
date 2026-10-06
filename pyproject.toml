@@ -1,0 +1,9 @@
+[project]
+name = "rag-project"
+version = "0.1.0"
+description = "RAG sur documentation technique : FastAPI + Qdrant + BM25 + Ollama"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]

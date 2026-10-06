@@ -1,0 +1,22 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- Environnement ---
+.env
+
+# --- MLOps / artefacts ---
+mlruns/
+mlflow.db
+eval/results.json
+
+# --- Données & index (volumineux, régénérés) ---
+data/raw_docs/*
+!data/raw_docs/.gitkeep
+storage/
+
+# --- OS ---
+.DS_Store
