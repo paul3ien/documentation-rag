@@ -4,7 +4,8 @@
 
 Le but : répondre à des questions sur de la **documentation technique** en
 s'appuyant uniquement sur les documents fournis, sans que le modèle n'ajoute
-d'informations de sa propre initiative.
+d'informations de sa propre initiative. Si un document n'est pas disponible
+localement, un **agent** va le chercher sur le web et l'intègre au corpus.
 
 ## Fonctionnement
 
@@ -12,6 +13,7 @@ d'informations de sa propre initiative.
 2. **Indexation** — chaque chunk est encodé en vecteur (Qdrant local + `fastembed`) et indexé pour la recherche lexicale (`rank-bm25`).
 3. **Recherche hybride** — les résultats vecteurs et BM25 sont fusionnés par Reciprocal Rank Fusion (RRF).
 4. **Génération** — un LLM local (Ollama) répond strictement à partir du contexte récupéré.
+5. **Repli web** — si un document n'est pas trouvé en local, un agent (LangChain + DeepSeek) le cherche sur le web, le reformule, l'ajoute au corpus puis le ré-indexe (voir « Agent de recherche web »).
 
 ## Stack
 
@@ -19,6 +21,7 @@ d'informations de sa propre initiative.
 - **Vector store** : Qdrant (mode local) + embeddings `fastembed`
 - **Recherche lexicale** : `rank-bm25`
 - **LLM** : Ollama (local)
+- **Agent web** : LangChain + DeepSeek (`langchain-deepseek`), recherche DuckDuckGo (`ddgs`)
 - **Évaluation** : RAGAS + MLflow
 - **MLOps** : DVC
 
@@ -30,7 +33,8 @@ d'informations de sa propre initiative.
 │   ├── config.py          # configuration centralisée
 │   ├── ingestion/         # extraction + découpage des documents
 │   ├── retrieval/         # index vecteurs, BM25, recherche hybride
-│   └── llm/               # client Ollama + prompt
+│   ├── llm/               # client Ollama + prompt
+│   └── agent/             # agent de recherche web (LangChain + DeepSeek)
 ├── scripts/               # scripts d'ingestion
 ├── eval/                  # évaluation RAGAS
 ├── tests/                 # tests (pytest)
@@ -50,7 +54,8 @@ pip install -e .
 ```
 
 Prérequis : [Ollama](https://ollama.com) installé et un modèle disponible, p. ex.
-`ollama pull qwen2.5:3b-instruct-q4_K_M`.
+`ollama pull qwen2.5:3b-instruct-q4_K_M`. L'agent web nécessite en plus une clé
+DeepSeek (voir ci-dessous).
 
 ## Utilisation
 
@@ -90,7 +95,29 @@ dvc repro ingest   # (re)génère les index
 dvc repro          # pipeline complet (ingest + éval ; nécessite Ollama)
 ```
 
+## Agent de recherche web
+
+Quand une question ne trouve pas de réponse dans le corpus local, un agent
+**LangChain + DeepSeek** prend le relais :
+
+1. **Recherche** — DuckDuckGo (`ddgs`) cherche des documents sur le web (PDF).
+2. **Lecture** — le document est téléchargé puis son texte extrait (PyMuPDF).
+3. **Reformulation** — DeepSeek en extrait les éléments importants et le réécrit
+   de façon **claire et concise**, puis **vérifie** que la synthèse est fidèle et
+   exploitable (auto-contrôle).
+4. **Enregistrement** — la synthèse est écrite en Markdown dans `data/raw_docs/`.
+5. **Ré-indexation** — la pipeline d'ingestion existante l'intègre au corpus
+   (Qdrant + BM25) ; le RAG classique peut alors la retrouver.
+
+### Configuration
+
+L'agent utilise l'API DeepSeek. La clé n'est **jamais** dans le code : elle est
+lue depuis un fichier `.env` (non versionné) ou la variable d'environnement
+`DEEPSEEK_API_KEY`.
+
 ## Avancement
+
+Base (v2) :
 
 - [x] Configuration centralisée
 - [x] Ingestion / découpage en chunks
@@ -100,5 +127,12 @@ dvc repro          # pipeline complet (ingest + éval ; nécessite Ollama)
 - [x] Client LLM (Ollama)
 - [x] API FastAPI
 - [x] Évaluation RAGAS + MLflow
-- [x] Évaluation RAGAS + MLflow
 - [x] DVC / paramètres
+
+Agent de recherche web :
+
+- [ ] Configuration DeepSeek (`.env`)
+- [ ] Outils de l'agent (recherche web, lecture, sauvegarde)
+- [ ] Agent LangChain + DeepSeek
+- [ ] Orchestration multi-agent (routeur → chercheur → curateur)
+- [ ] Intégration au RAG (repli web + ré-indexation)
