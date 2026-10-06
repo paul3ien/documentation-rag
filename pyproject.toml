@@ -11,3 +11,7 @@ include = ["app*"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "network: tests d'intégration nécessitant un accès réseau (désactivés par défaut)",
+]
+addopts = "-m 'not network'"
