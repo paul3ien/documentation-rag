@@ -90,3 +90,18 @@ def test_answer_web_fallback_not_approved_does_not_save(monkeypatch):
 
     assert result.used_web_research is True
     assert result.answer == ABSENCE_PHRASE
+
+
+def test_answer_falls_back_to_local_when_web_fails(monkeypatch):
+    monkeypatch.setattr(orchestrator, "hybrid_search", lambda q, *a, **k: HITS)
+    monkeypatch.setattr(orchestrator, "generate_answer", lambda q, ctx: ABSENCE_PHRASE)
+    monkeypatch.setattr(
+        orchestrator,
+        "research",
+        lambda q: (_ for _ in ()).throw(RuntimeError("clé DeepSeek absente")),
+    )
+
+    result = orchestrator.answer("q")
+
+    assert result.used_web_research is False
+    assert result.answer == ABSENCE_PHRASE

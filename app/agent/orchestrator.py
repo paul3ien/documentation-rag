@@ -58,8 +58,11 @@ def answer(question: str, *, allow_web: bool = True) -> Answer:
     if not (allow_web and is_absence(local_answer)):
         return Answer(answer=local_answer, sources=hits, used_web_research=False)
 
-    raw_material = research(question)
-    curation = curate(question, raw_material)
+    try:
+        raw_material = research(question)
+        curation = curate(question, raw_material)
+    except Exception:  # noqa: BLE001 — repli web indisponible : on répond en local
+        return Answer(answer=local_answer, sources=hits, used_web_research=False)
 
     if curation.approved:
         save_document(question, curation.content)
