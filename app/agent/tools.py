@@ -1,9 +1,15 @@
 """Outils mis à disposition de l'agent de recherche web."""
 
+import re
+from datetime import date
+from pathlib import Path
+
 import requests
 from bs4 import BeautifulSoup
 from ddgs import DDGS
 from ddgs.exceptions import DDGSException
+
+from app.config import BASE_DIR
 
 DEFAULT_MAX_RESULTS = 5
 PDF_FILTER = "filetype:pdf"
@@ -12,6 +18,9 @@ REQUEST_TIMEOUT = 30
 USER_AGENT = "rag-project/0.1"
 # Balises HTML sans contenu utile pour le texte.
 HTML_NOISE_TAGS = ["script", "style", "nav", "header", "footer"]
+
+# Dossier où sont déposés les documents collectés (repris par l'ingestion).
+CORPUS_DIR = BASE_DIR / "data" / "raw_docs"
 
 
 def search_web(
@@ -74,3 +83,35 @@ def read_url(url: str) -> dict:
     text = _extract_pdf(response.content) if is_pdf else _extract_html(response.content)
 
     return {"url": url, "content_type": content_type, "text": text}
+
+
+def _slugify(text: str) -> str:
+    """Transforme un titre en nom de fichier sûr (minuscules, tirets)."""
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-") or "document"
+
+
+def save_document(
+    title: str,
+    content: str,
+    source_url: str | None = None,
+    docs_dir: Path | str | None = None,
+) -> Path:
+    """Écrit un document Markdown dans le corpus local.
+
+    Le fichier est déposé dans `data/raw_docs/` (surchargeable via `docs_dir`)
+    afin d'être repris par la pipeline d'ingestion existante. Un en-tête rappelle
+    le titre et la source. Retourne le chemin du fichier écrit.
+    """
+    directory = Path(docs_dir) if docs_dir is not None else CORPUS_DIR
+    directory.mkdir(parents=True, exist_ok=True)
+
+    header = [f"# {title}"]
+    if source_url:
+        header.append(f"> Source : {source_url}")
+    header.append(f"> Collecté le {date.today().isoformat()}")
+
+    path = directory / f"{_slugify(title)}.md"
+    path.write_text(
+        "\n\n".join(header) + "\n\n" + content.strip() + "\n", encoding="utf-8"
+    )
+    return path
