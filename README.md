@@ -74,7 +74,7 @@ pytest
 - [x] Index vectoriel (Qdrant + fastembed)
 - [x] Index BM25
 - [x] Recherche hybride (RRF)
-- [ ] Client LLM (Ollama)
-- [ ] API FastAPI
+- [x] Client LLM (Ollama)
+- [x] API FastAPI
 - [ ] Évaluation RAGAS + MLflow
 - [ ] DVC / paramètres
