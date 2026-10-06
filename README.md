@@ -33,6 +33,7 @@ d'informations de sa propre initiative.
 │   └── llm/               # client Ollama + prompt
 ├── scripts/               # scripts d'ingestion
 ├── eval/                  # évaluation RAGAS
+├── tests/                 # tests (pytest)
 ├── data/raw_docs/         # documents sources (non versionnés)
 └── storage/               # index générés (non versionnés)
 ```
@@ -56,6 +57,13 @@ python scripts/ingest.py
 
 # 2. Lancer l'API
 uvicorn app.main:app --reload
+```
+
+## Tests
+
+```sh
+pip install -r requirements-dev.txt
+pytest
 ```
 
 ## Avancement

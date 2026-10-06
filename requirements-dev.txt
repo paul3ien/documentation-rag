@@ -1,0 +1,5 @@
+# Dépendances de développement / tests.
+# Installe aussi les dépendances d'exécution :
+-r requirements.txt
+
+pytest==8.*

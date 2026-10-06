@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+.pytest_cache/
 
 # --- Environnement ---
 .env
@@ -17,6 +18,9 @@ eval/results.json
 data/raw_docs/*
 !data/raw_docs/.gitkeep
 storage/
+
+# --- Ancien projet (référence, non versionné) ---
+raguser/
 
 # --- OS ---
 .DS_Store
