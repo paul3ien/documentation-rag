@@ -111,6 +111,8 @@ def retrieval_drift(
             "p_value": float(p_value),
             "reference_mean": float(np.mean(reference)),
             "recent_mean": float(np.mean(recent)),
+            "reference": [float(x) for x in reference],
+            "recent": [float(x) for x in recent],
         },
     )
 
