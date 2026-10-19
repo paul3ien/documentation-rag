@@ -14,6 +14,9 @@ mlruns/
 mlflow.db
 eval/results.json
 
+# --- Monitoring ---
+logs/
+
 # --- Données & index (volumineux, régénérés) ---
 data/raw_docs/*
 !data/raw_docs/.gitkeep
