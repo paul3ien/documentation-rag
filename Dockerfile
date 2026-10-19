@@ -34,6 +34,7 @@ FROM python:3.11-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
     PATH="/opt/venv/bin:$PATH" \
     FASTEMBED_CACHE_PATH=/opt/fastembed_cache
 
