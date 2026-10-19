@@ -41,6 +41,29 @@ kubectl apply -f k8s/jobs/ollama-pull.yaml
 kubectl -n rag logs -f job/ollama-pull
 ```
 
+### Variante : Ollama hors du cluster (poste GPU)
+
+`40-ollama.yaml` fournit un Ollama dans le cluster. Pour utiliser plutôt un
+poste GPU déjà équipé, il suffit de repointer l'API :
+
+```sh
+kubectl -n rag patch configmap rag-config --type merge \
+  -p '{"data":{"OLLAMA_HOST":"http://<ip_du_poste>:11434"}}'
+kubectl -n rag scale deployment/ollama --replicas=0
+kubectl -n rag rollout restart deployment/api
+```
+
+Si le poste GPU n'est pas joignable depuis le nœud (autre réseau, tunnel),
+`scripts/dev/ollama_relay.py` relaie un port local vers la cible :
+
+```sh
+python scripts/dev/ollama_relay.py --listen 0.0.0.0:11435 --target <ip_du_poste>:11434
+# puis : OLLAMA_HOST=http://<ip_de_la_machine_relais>:11435
+```
+
+C'est un outil de développement : le relais doit rester lancé pour que l'API
+atteigne le modèle.
+
 ## 4. Charger les documents
 
 Le volume `rag-docs` démarre vide. Copie les documents dans le pod API :
@@ -70,6 +93,7 @@ kubectl -n rag rollout restart deployment/api
 ## Notes
 
 - `local-path` : volumes stockés sur le disque du nœud (single node).
-- L'ensemble est persistant : `rag-docs`, `rag-storage`, `rag-logs`, `rag-mlruns`, `ollama-models`.
+- L'ensemble est persistant : `rag-docs`, `rag-storage`, `rag-logs`, `ollama-models`.
+- Les métriques d'évaluation vivent sur le serveur MLflow (`MLFLOW_TRACKING_URI`) et non dans un volume local.
 - L'`initContainer` d'ingestion s'exécute à chaque démarrage de l'API : l'index reflète donc `data/raw_docs`.
 - L'image Ollama pèse plusieurs Go ; le nœud dispose d'environ 20 Go d'espace éphémère.
