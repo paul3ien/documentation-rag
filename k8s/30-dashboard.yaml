@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  namespace: rag
+  labels:
+    app: dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+        - name: dashboard
+          image: rag-project:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - streamlit
+            - run
+            - dashboard/main.py
+            - --server.address
+            - 0.0.0.0
+            - --server.port
+            - "8501"
+            - --server.headless
+            - "true"
+          ports:
+            - containerPort: 8501
+          volumeMounts:
+            - name: docs
+              mountPath: /app/data/raw_docs
+              readOnly: true
+            - name: storage
+              mountPath: /app/storage
+              readOnly: true
+            - name: logs
+              mountPath: /app/logs
+              readOnly: true
+            - name: mlruns
+              mountPath: /app/mlruns
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+      volumes:
+        - name: docs
+          persistentVolumeClaim:
+            claimName: rag-docs
+        - name: storage
+          persistentVolumeClaim:
+            claimName: rag-storage
+        - name: logs
+          persistentVolumeClaim:
+            claimName: rag-logs
+        - name: mlruns
+          persistentVolumeClaim:
+            claimName: rag-mlruns
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: rag
+spec:
+  type: NodePort
+  selector:
+    app: dashboard
+  ports:
+    - port: 8501
+      targetPort: 8501
+      nodePort: 30850

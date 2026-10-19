@@ -1,0 +1,23 @@
+# Tire le modèle dans Ollama (à lancer une fois Ollama prêt).
+#   kubectl -n rag delete job ollama-pull --ignore-not-found
+#   kubectl apply -f k8s/jobs/ollama-pull.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-pull
+  namespace: rag
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: pull
+          image: ollama/ollama:latest
+          env:
+            - name: OLLAMA_HOST
+              value: http://ollama:11434
+            - name: MODEL
+              value: qwen2.5:3b-instruct-q4_K_M
+          command: ["sh", "-c", "ollama pull \"$MODEL\""]

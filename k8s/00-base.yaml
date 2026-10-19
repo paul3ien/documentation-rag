@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rag
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-config
+  namespace: rag
+data:
+  # Ollama dans le cluster (service `ollama` du namespace `rag`).
+  OLLAMA_HOST: "http://ollama:11434"
+  OLLAMA_MODEL: "qwen2.5:3b-instruct-q4_K_M"
+  DEEPSEEK_MODEL: "deepseek-chat"
+---
+# Exemple de secret. Remplace la valeur par ta clé, ou crée-le via :
+#   kubectl -n rag create secret generic rag-secrets \
+#     --from-literal=DEEPSEEK_API_KEY=sk-...
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rag-secrets
+  namespace: rag
+type: Opaque
+stringData:
+  DEEPSEEK_API_KEY: ""
