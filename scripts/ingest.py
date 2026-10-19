@@ -2,6 +2,7 @@
 
 from app.config import BASE_DIR, CHUNK_OVERLAP, CHUNK_SIZE
 from app.ingestion.loaders import load_and_chunk
+from app.monitoring.corpus import count_documents, log_corpus_snapshot
 from app.retrieval.bm25_index import build_bm25
 from app.retrieval.vector_store import build_index
 
@@ -19,6 +20,7 @@ def main(docs_dir: str = DOCS_DIR) -> None:
 
     build_index(chunks)
     build_bm25(chunks)
+    log_corpus_snapshot(count_documents(docs_dir), len(chunks))
     print(f"{len(chunks)} chunks indexés.")
 
 

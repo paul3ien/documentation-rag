@@ -12,6 +12,7 @@ from app.agent.tools import CORPUS_DIR, save_document
 from app.config import CHUNK_OVERLAP, CHUNK_SIZE, QDRANT_COLLECTION
 from app.ingestion.loaders import load_and_chunk
 from app.llm.ollama_client import ABSENCE_PHRASE, generate_answer
+from app.monitoring.corpus import count_documents, log_corpus_snapshot
 from app.monitoring.queries import log_query
 from app.retrieval.bm25_index import build_bm25
 from app.retrieval.hybrid import hybrid_search
@@ -36,13 +37,15 @@ def is_absence(answer: str) -> bool:
 
 def reindex(docs_dir=None) -> int:
     """Reconstruit les index (Qdrant + BM25) à partir du corpus local."""
+    directory = docs_dir or CORPUS_DIR
     client = get_client()
     if client.collection_exists(QDRANT_COLLECTION):
         client.delete_collection(QDRANT_COLLECTION)
 
-    chunks = load_and_chunk(str(docs_dir or CORPUS_DIR), CHUNK_SIZE, CHUNK_OVERLAP)
+    chunks = load_and_chunk(str(directory), CHUNK_SIZE, CHUNK_OVERLAP)
     build_index(chunks)
     build_bm25(chunks)
+    log_corpus_snapshot(count_documents(directory), len(chunks))
     return len(chunks)
 
 

@@ -10,9 +10,10 @@ HITS = [{"text": "ctx", "source": "s", "score": 1.0}]
 
 
 @pytest.fixture(autouse=True)
-def _no_query_log(monkeypatch):
-    """Empêche l'écriture dans le vrai journal pendant les tests."""
+def _no_monitoring_writes(monkeypatch):
+    """Empêche l'écriture dans les vrais journaux pendant les tests."""
     monkeypatch.setattr(orchestrator, "log_query", lambda *a, **k: None)
+    monkeypatch.setattr(orchestrator, "log_corpus_snapshot", lambda *a, **k: None)
 
 
 def test_is_absence_true():
@@ -37,6 +38,12 @@ def test_reindex_rebuilds_indexes(monkeypatch):
     monkeypatch.setattr(orchestrator, "load_and_chunk", lambda d, cs, co: ["c1", "c2"])
     monkeypatch.setattr(orchestrator, "build_index", lambda chunks: calls.setdefault("index", chunks))
     monkeypatch.setattr(orchestrator, "build_bm25", lambda chunks: calls.setdefault("bm25", chunks))
+    monkeypatch.setattr(orchestrator, "count_documents", lambda d: 5)
+    monkeypatch.setattr(
+        orchestrator,
+        "log_corpus_snapshot",
+        lambda n_docs, n_chunks: calls.update(corpus=(n_docs, n_chunks)),
+    )
 
     count = orchestrator.reindex()
 
@@ -44,6 +51,7 @@ def test_reindex_rebuilds_indexes(monkeypatch):
     assert calls["deleted"] == orchestrator.QDRANT_COLLECTION
     assert calls["index"] == ["c1", "c2"]
     assert calls["bm25"] == ["c1", "c2"]
+    assert calls["corpus"] == (5, 2)
 
 
 def test_answer_uses_local_when_present(monkeypatch):
