@@ -23,6 +23,8 @@ localement, un **agent** va le chercher sur le web et l'intègre au corpus.
 - **LLM** : Ollama (local)
 - **Agent web** : LangChain + DeepSeek (`langchain-deepseek`), recherche DuckDuckGo (`ddgs`)
 - **Évaluation** : RAGAS + MLflow
+- **Monitoring** : journalisation JSONL + calculs de drift
+- **Dashboard** : Streamlit + Plotly
 - **MLOps** : DVC
 
 ## Structure
@@ -34,13 +36,16 @@ localement, un **agent** va le chercher sur le web et l'intègre au corpus.
 │   ├── ingestion/         # extraction + découpage des documents
 │   ├── retrieval/         # index vecteurs, BM25, recherche hybride
 │   ├── llm/               # client Ollama + prompt
-│   └── agent/             # agent de recherche web (LangChain + DeepSeek)
+│   ├── agent/             # agent de recherche web (LangChain + DeepSeek)
+│   └── monitoring/        # journalisation + calculs de drift
+├── dashboard/             # dashboard Streamlit (KPI + drifts)
 ├── scripts/               # scripts d'ingestion
 ├── eval/                  # évaluation RAGAS
 ├── tests/                 # tests (pytest)
 ├── params.yaml            # paramètres du pipeline
 ├── dvc.yaml               # pipeline DVC (stages ingest, eval)
 ├── data/raw_docs/         # documents sources (non versionnés)
+├── logs/                  # journaux de monitoring (non versionnés)
 └── storage/               # index générés (non versionnés)
 ```
 
@@ -132,6 +137,30 @@ L'agent utilise l'API DeepSeek. La clé n'est **jamais** dans le code : elle est
 lue depuis un fichier `.env` (non versionné) ou la variable d'environnement
 `DEEPSEEK_API_KEY`.
 
+## Monitoring & dashboard
+
+Les requêtes et l'évolution du corpus sont journalisés dans `logs/` (non
+versionné) :
+
+- `logs/queries.jsonl` — question, `top_score`, nombre de sources, repli web ;
+- `logs/corpus.jsonl` — instantanés `n_docs` / `n_chunks`.
+
+Cinq types de drift sont suivis :
+
+| Drift | Calcul |
+|-------|--------|
+| Performance | variation des métriques RAGAS entre runs (MLflow) |
+| Retrieval | test KS sur les scores de récupération récents vs référence |
+| Query | distance cosinus entre centroïdes d'embeddings des questions |
+| Corpus | évolution du nombre de documents / chunks |
+| Fallback | évolution du taux de repli web |
+
+Dashboard :
+
+```sh
+streamlit run dashboard/main.py
+```
+
 ## Avancement
 
 Base (v2) :
@@ -148,8 +177,15 @@ Base (v2) :
 
 Agent de recherche web :
 
-- [ ] Configuration DeepSeek (`.env`)
-- [ ] Outils de l'agent (recherche web, lecture, sauvegarde)
-- [ ] Agent LangChain + DeepSeek
-- [ ] Orchestration multi-agent (routeur → chercheur → curateur)
-- [ ] Intégration au RAG (repli web + ré-indexation)
+- [x] Configuration DeepSeek (`.env`)
+- [x] Outils de l'agent (recherche web, lecture, sauvegarde)
+- [x] Agent LangChain + DeepSeek
+- [x] Orchestration multi-agent (routeur → chercheur → curateur)
+- [x] Intégration au RAG (repli web + ré-indexation)
+
+Monitoring & dashboard :
+
+- [x] Journalisation des requêtes
+- [x] Snapshots du corpus
+- [x] Calcul des 5 types de drift
+- [x] Dashboard Streamlit (KPI + drifts)
