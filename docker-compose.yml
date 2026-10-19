@@ -1,47 +1,24 @@
 services:
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama-data:/root/.ollama
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
-  # Tire le modèle une seule fois (le service se termine ensuite).
-  ollama-init:
-    image: ollama/ollama:latest
-    environment:
-      OLLAMA_HOST: http://ollama:11434
-    entrypoint: ["ollama", "pull", "${OLLAMA_MODEL:-qwen2.5:3b-instruct-q4_K_M}"]
-    depends_on:
-      ollama:
-        condition: service_healthy
-
   api:
     build: .
+    image: rag-project:latest
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
-      OLLAMA_HOST: http://ollama:11434
+      # Par défaut : Ollama tourne sur l'hôte (voir README).
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b-instruct-q4_K_M}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data/raw_docs:/app/data/raw_docs
       - ./storage:/app/storage
       - ./logs:/app/logs
       - ./eval:/app/eval
       - ./mlruns:/app/mlruns
-    depends_on:
-      ollama:
-        condition: service_healthy
-      ollama-init:
-        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
@@ -49,22 +26,20 @@ services:
       retries: 5
 
   dashboard:
-    build: .
+    # Même image que l'API (construite par le service `api`).
+    image: rag-project:latest
     command: >-
       streamlit run dashboard/main.py
       --server.address 0.0.0.0
       --server.port 8501
       --server.headless true
     ports:
-      - "8501:8501"
-    environment:
-      OLLAMA_HOST: http://ollama:11434
+      - "8502:8501"
     volumes:
       - ./data/raw_docs:/app/data/raw_docs
       - ./storage:/app/storage
       - ./logs:/app/logs
       - ./eval:/app/eval
       - ./mlruns:/app/mlruns
-
-volumes:
-  ollama-data:
+    depends_on:
+      - api

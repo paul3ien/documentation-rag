@@ -1,0 +1,39 @@
+# Variante "tout en Docker" : ajoute Ollama et le téléchargement du modèle.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.ollama.yml up --build
+#
+# ⚠️ L'image Ollama pèse plusieurs Go : prévoir de l'espace disque.
+
+services:
+  api:
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  ollama-init:
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["ollama", "pull", "${OLLAMA_MODEL:-qwen2.5:3b-instruct-q4_K_M}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+volumes:
+  ollama-data:
