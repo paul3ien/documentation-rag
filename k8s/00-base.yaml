@@ -13,15 +13,10 @@ data:
   OLLAMA_HOST: "http://ollama:11434"
   OLLAMA_MODEL: "qwen2.5:3b-instruct-q4_K_M"
   DEEPSEEK_MODEL: "deepseek-chat"
----
-# Exemple de secret. Remplace la valeur par ta clé, ou crée-le via :
+  # Serveur MLflow distant (LXC 10.10.20.14).
+  MLFLOW_TRACKING_URI: "http://10.10.20.14:5000"
+# Le secret n'est PAS versionné (pour éviter d'écraser une vraie clé avec du
+# vide lors d'un `kubectl apply`). Crée-le avec :
 #   kubectl -n rag create secret generic rag-secrets \
 #     --from-literal=DEEPSEEK_API_KEY=sk-...
-apiVersion: v1
-kind: Secret
-metadata:
-  name: rag-secrets
-  namespace: rag
-type: Opaque
-stringData:
-  DEEPSEEK_API_KEY: ""
+# Voir k8s/examples/secret.yaml pour un modèle.

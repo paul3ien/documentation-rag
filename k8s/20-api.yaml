@@ -7,6 +7,8 @@ metadata:
     app: api
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: api
@@ -49,8 +51,6 @@ spec:
               mountPath: /app/storage
             - name: logs
               mountPath: /app/logs
-            - name: mlruns
-              mountPath: /app/mlruns
           readinessProbe:
             httpGet:
               path: /health
@@ -80,9 +80,6 @@ spec:
         - name: logs
           persistentVolumeClaim:
             claimName: rag-logs
-        - name: mlruns
-          persistentVolumeClaim:
-            claimName: rag-mlruns
 ---
 apiVersion: v1
 kind: Service

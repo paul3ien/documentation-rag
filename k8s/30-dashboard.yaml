@@ -41,9 +41,6 @@ spec:
             - name: logs
               mountPath: /app/logs
               readOnly: true
-            - name: mlruns
-              mountPath: /app/mlruns
-              readOnly: true
           readinessProbe:
             httpGet:
               path: /_stcore/health
@@ -67,9 +64,6 @@ spec:
         - name: logs
           persistentVolumeClaim:
             claimName: rag-logs
-        - name: mlruns
-          persistentVolumeClaim:
-            claimName: rag-mlruns
 ---
 apiVersion: v1
 kind: Service
