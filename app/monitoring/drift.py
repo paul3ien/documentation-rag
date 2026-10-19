@@ -60,6 +60,38 @@ def performance_drift(
     )
 
 
+def load_eval_history(
+    experiment_name: str = "rag-eval", tracking_uri: str | None = None
+) -> list[dict]:
+    """Charge l'historique des runs d'évaluation depuis MLflow.
+
+    Retourne une liste de runs triés par date, avec les métriques RAGAS.
+    """
+    from mlflow.tracking import MlflowClient
+
+    from app.config import MLFLOW_TRACKING_URI
+
+    client = MlflowClient(tracking_uri=tracking_uri or MLFLOW_TRACKING_URI)
+    experiment = client.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        return []
+
+    runs = client.search_runs(
+        experiment_ids=[experiment.experiment_id],
+        order_by=["attributes.start_time ASC"],
+    )
+    return [
+        {
+            "run_id": run.info.run_id,
+            "timestamp": run.info.start_time,
+            "faithfulness": run.data.metrics.get("faithfulness"),
+            "context_precision": run.data.metrics.get("context_precision"),
+            "answer_relevancy": run.data.metrics.get("answer_relevancy"),
+        }
+        for run in runs
+    ]
+
+
 def retrieval_drift(
     queries: list[dict], recent_n: int = RECENT_WINDOW
 ) -> DriftResult:

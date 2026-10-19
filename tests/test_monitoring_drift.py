@@ -98,3 +98,26 @@ def test_performance_drift_ignores_nan():
 
     assert result.enough_data is True
     assert result.detail["values"] == [0.9, 0.8]
+
+
+def test_load_eval_history_from_mlflow(tmp_path):
+    from mlflow.tracking import MlflowClient
+
+    tracking_uri = f"file:{tmp_path / 'mlruns'}"
+    client = MlflowClient(tracking_uri=tracking_uri)
+    experiment_id = client.create_experiment("rag-eval")
+    run = client.create_run(experiment_id)
+    client.log_metric(run.info.run_id, "faithfulness", 0.9)
+    client.log_metric(run.info.run_id, "context_precision", 0.8)
+    client.log_metric(run.info.run_id, "answer_relevancy", 0.7)
+
+    history = drift.load_eval_history("rag-eval", tracking_uri=tracking_uri)
+
+    assert len(history) == 1
+    assert history[0]["faithfulness"] == 0.9
+    assert history[0]["context_precision"] == 0.8
+    assert history[0]["answer_relevancy"] == 0.7
+
+
+def test_load_eval_history_missing_experiment(tmp_path):
+    assert drift.load_eval_history("absent", tracking_uri=f"file:{tmp_path}") == []
