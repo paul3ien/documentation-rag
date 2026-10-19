@@ -72,6 +72,52 @@ python scripts/ingest.py
 uvicorn app.main:app --reload
 ```
 
+## Docker
+
+Par défaut, les conteneurs utilisent **Ollama installé sur l'hôte** (plus léger,
+pas d'image Ollama de plusieurs Go). Sur l'hôte :
+
+```sh
+ollama serve
+ollama pull qwen2.5:3b-instruct-q4_K_M
+```
+
+Puis :
+
+```sh
+docker compose up --build
+
+# première indexation des documents
+docker compose run --rm api python scripts/ingest.py
+```
+
+- API : http://localhost:8001/docs
+- Dashboard : http://localhost:8502
+
+Le conteneur joint l'hôte via `host.docker.internal:11434`. Si la connexion
+échoue, fais écouter Ollama sur toutes les interfaces :
+
+```sh
+OLLAMA_HOST=0.0.0.0:11434 ollama serve
+```
+
+### Tout en Docker
+
+Pour embarquer Ollama (et tirer le modèle automatiquement) :
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.ollama.yml up --build
+```
+
+⚠️ Cette variante télécharge l'image Ollama (plusieurs Go) : prévoir de l'espace
+disque (Docker Desktop → Resources → Disk).
+
+Les dossiers `data/raw_docs`, `storage`, `logs`, `eval` et `mlruns` sont montés
+depuis l'hôte, donc index, journaux, résultats d'évaluation et dashboard
+persistent. L'API et le dashboard partagent la **même image** (construite une
+seule fois). La clé DeepSeek est lue depuis `.env` (`DEEPSEEK_API_KEY`) et n'est
+jamais copiée dans l'image.
+
 ## Tests
 
 ```sh
