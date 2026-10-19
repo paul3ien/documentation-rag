@@ -1,6 +1,7 @@
 """API HTTP exposant le RAG : recherche hybride, génération et repli web."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from ollama import ResponseError
 from pydantic import BaseModel
 
 from app.agent.orchestrator import answer as answer_question
@@ -36,7 +37,15 @@ def health() -> dict:
 @app.post("/query", response_model=Answer)
 def query(q: Query) -> Answer:
     """Répond à une question, avec repli web si l'information est absente."""
-    result = answer_question(q.question, allow_web=WEB_FALLBACK_ENABLED)
+    try:
+        result = answer_question(q.question, allow_web=WEB_FALLBACK_ENABLED)
+    except (ConnectionError, ResponseError) as exc:
+        # Ollama injoignable ou en erreur : le RAG ne peut pas générer.
+        raise HTTPException(
+            status_code=503,
+            detail=f"Service de génération indisponible : {exc}",
+        ) from exc
+
     return Answer(
         answer=result.answer,
         sources=[Source(**source) for source in result.sources],

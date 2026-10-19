@@ -48,3 +48,16 @@ def test_query_reports_web_research(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["used_web_research"] is True
+
+
+def test_query_returns_503_when_ollama_is_unreachable(monkeypatch):
+    def _boom(question, **kwargs):
+        raise ConnectionError("Failed to connect to Ollama.")
+
+    monkeypatch.setattr(main, "answer_question", _boom)
+
+    client = TestClient(main.app)
+    response = client.post("/query", json={"question": "Quelle est la ron ?"})
+
+    assert response.status_code == 503
+    assert "Ollama" in response.json()["detail"]
