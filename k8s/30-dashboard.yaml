@@ -31,6 +31,9 @@ spec:
             - "true"
           ports:
             - containerPort: 8501
+          envFrom:
+            - configMapRef:
+                name: rag-config
           volumeMounts:
             - name: docs
               mountPath: /app/data/raw_docs
