@@ -1,0 +1,31 @@
+# --- Git / IDE ---
+.git
+.gitignore
+.dvc
+.vscode
+.idea
+
+# --- Python ---
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.pytest_cache
+
+# --- Secrets ---
+.env
+
+# --- Artefacts générés (montés via des volumes) ---
+mlruns
+logs
+storage
+data/raw_docs/*
+!data/raw_docs/.gitkeep
+
+# --- Divers ---
+raguser
+profile-section.md
+_tmp_*
+.DS_Store
