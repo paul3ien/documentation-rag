@@ -12,6 +12,7 @@ from app.agent.tools import CORPUS_DIR, save_document
 from app.config import CHUNK_OVERLAP, CHUNK_SIZE, QDRANT_COLLECTION
 from app.ingestion.loaders import load_and_chunk
 from app.llm.ollama_client import ABSENCE_PHRASE, generate_answer
+from app.monitoring.queries import log_query
 from app.retrieval.bm25_index import build_bm25
 from app.retrieval.hybrid import hybrid_search
 from app.retrieval.vector_store import build_index, get_client
@@ -45,6 +46,12 @@ def reindex(docs_dir=None) -> int:
     return len(chunks)
 
 
+def _finish(question: str, answer_text: str, hits: list[dict], *, used_web: bool) -> Answer:
+    """Journalise la requête et construit la réponse finale."""
+    log_query(question, hits, used_web)
+    return Answer(answer=answer_text, sources=hits, used_web_research=used_web)
+
+
 def answer(question: str, *, allow_web: bool = True) -> Answer:
     """Répond via le RAG local, avec repli web si l'information est absente.
 
@@ -56,13 +63,13 @@ def answer(question: str, *, allow_web: bool = True) -> Answer:
     local_answer = generate_answer(question, [hit["text"] for hit in hits])
 
     if not (allow_web and is_absence(local_answer)):
-        return Answer(answer=local_answer, sources=hits, used_web_research=False)
+        return _finish(question, local_answer, hits, used_web=False)
 
     try:
         raw_material = research(question)
         curation = curate(question, raw_material)
     except Exception:  # noqa: BLE001 — repli web indisponible : on répond en local
-        return Answer(answer=local_answer, sources=hits, used_web_research=False)
+        return _finish(question, local_answer, hits, used_web=False)
 
     if curation.approved:
         save_document(question, curation.content)
@@ -70,4 +77,4 @@ def answer(question: str, *, allow_web: bool = True) -> Answer:
         hits = hybrid_search(question)
         local_answer = generate_answer(question, [hit["text"] for hit in hits])
 
-    return Answer(answer=local_answer, sources=hits, used_web_research=True)
+    return _finish(question, local_answer, hits, used_web=True)

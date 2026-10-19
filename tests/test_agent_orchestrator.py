@@ -9,6 +9,12 @@ from app.llm.ollama_client import ABSENCE_PHRASE
 HITS = [{"text": "ctx", "source": "s", "score": 1.0}]
 
 
+@pytest.fixture(autouse=True)
+def _no_query_log(monkeypatch):
+    """Empêche l'écriture dans le vrai journal pendant les tests."""
+    monkeypatch.setattr(orchestrator, "log_query", lambda *a, **k: None)
+
+
 def test_is_absence_true():
     assert orchestrator.is_absence(f"Voici. {ABSENCE_PHRASE}") is True
 
@@ -105,3 +111,18 @@ def test_answer_falls_back_to_local_when_web_fails(monkeypatch):
 
     assert result.used_web_research is False
     assert result.answer == ABSENCE_PHRASE
+
+
+def test_answer_logs_the_query(monkeypatch):
+    logged = {}
+    monkeypatch.setattr(
+        orchestrator,
+        "log_query",
+        lambda question, results, used: logged.update(question=question, used=used),
+    )
+    monkeypatch.setattr(orchestrator, "hybrid_search", lambda q, *a, **k: HITS)
+    monkeypatch.setattr(orchestrator, "generate_answer", lambda q, ctx: "10 ohms")
+
+    orchestrator.answer("ron ?")
+
+    assert logged == {"question": "ron ?", "used": False}
