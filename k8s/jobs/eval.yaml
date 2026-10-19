@@ -1,0 +1,36 @@
+# Évalue le RAG et journalise dans le MLflow distant (MLFLOW_TRACKING_URI).
+#
+# L'API doit être arrêtée : Qdrant local verrouille /app/storage.
+#
+#   kubectl -n rag scale deployment/api --replicas=0
+#   kubectl -n rag delete job eval --ignore-not-found
+#   kubectl apply -f k8s/jobs/eval.yaml
+#   kubectl -n rag wait --for=condition=complete job/eval --timeout=900s
+#   kubectl -n rag logs job/eval --tail=30
+#   kubectl -n rag scale deployment/api --replicas=1
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: eval
+  namespace: rag
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: eval
+          image: rag-project:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "-m", "eval.ragas_eval"]
+          envFrom:
+            - configMapRef:
+                name: rag-config
+          volumeMounts:
+            - name: storage
+              mountPath: /app/storage
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: rag-storage
