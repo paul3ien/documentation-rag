@@ -23,6 +23,11 @@ spec:
           image: rag-project:latest
           imagePullPolicy: IfNotPresent
           command: ["python", "scripts/ingest.py"]
+          resources:
+            requests:
+              memory: "256Mi"
+            limits:
+              memory: "2Gi"
           envFrom:
             - configMapRef:
                 name: rag-config

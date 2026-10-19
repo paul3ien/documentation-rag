@@ -9,6 +9,9 @@ from qdrant_client.models import Distance, PointStruct, VectorParams
 from app.config import EMBEDDING_DIM, EMBEDDING_MODEL, QDRANT_COLLECTION, QDRANT_PATH
 from app.ingestion.loaders import Chunk
 
+# Nombre de chunks encodés par lot (borne la mémoire pendant l'ingestion).
+EMBED_BATCH_SIZE = 32
+
 
 @lru_cache(maxsize=1)
 def get_embedder() -> TextEmbedding:
@@ -23,7 +26,10 @@ def get_client() -> QdrantClient:
 
 
 def build_index(chunks: list[Chunk]) -> None:
-    """Crée la collection si nécessaire puis y indexe les chunks."""
+    """Crée la collection si nécessaire puis y indexe les chunks.
+
+    L'encodage est fait par lots pour borner la mémoire (utile sur un petit nœud).
+    """
     client = get_client()
 
     if not client.collection_exists(QDRANT_COLLECTION):
@@ -32,16 +38,19 @@ def build_index(chunks: list[Chunk]) -> None:
             vectors_config=VectorParams(size=EMBEDDING_DIM, distance=Distance.COSINE),
         )
 
-    vectors = list(get_embedder().embed([c.text for c in chunks]))
-    points = [
-        PointStruct(
-            id=i,
-            vector=vector.tolist(),
-            payload={"text": chunk.text, "source": chunk.source},
-        )
-        for i, (vector, chunk) in enumerate(zip(vectors, chunks))
-    ]
-    client.upsert(QDRANT_COLLECTION, points=points)
+    embedder = get_embedder()
+    for start in range(0, len(chunks), EMBED_BATCH_SIZE):
+        batch = chunks[start : start + EMBED_BATCH_SIZE]
+        vectors = list(embedder.embed([c.text for c in batch]))
+        points = [
+            PointStruct(
+                id=start + i,
+                vector=vector.tolist(),
+                payload={"text": chunk.text, "source": chunk.source},
+            )
+            for i, (vector, chunk) in enumerate(zip(vectors, batch))
+        ]
+        client.upsert(QDRANT_COLLECTION, points=points)
 
 
 def search_vector(query: str, limit: int) -> list[tuple[int, float]]:
